@@ -12,14 +12,14 @@ set :ssh_options, { :user => "ubuntu", :keys=>[ENV['EC2_KEYFILE']]}
 set :nhosts, 1
 set :key, ENV['EC2_KEY']
 set :key_file, ENV['EC2_KEYFILE']
-set :ami, 'ami-cf4d67bb'  #EC2 eu-west-1 
+set :ami, 'ami-7e5c690a' #32-bit Ubuntu Maverick, eu-west-1
+set :availability_zone, 'eu-west-1a' 
 set :instance_type, 'm1.small'
 set :group_name, 'mikkelsen07data'
-set :dev, '/dev/sdf'
-set :mount_point, '/data'
 
-set :ebs_size, 10
-set :ebs_zone, 'eu-west-1a' 
+set :dev, '/dev/sdf'
+set :mount_point, '/mnt/data'
+set :ebs_size, 100
 
 vol_id = `cat VOLUMEID`.chomp
 set :vol_id, vol_id 
@@ -35,10 +35,7 @@ set :geo, 'GSE12241'
   # assuming de-compressed they're around 4GB per experiment, then a total of 21*4 =  84GB 
   # Say we make a 100GB EBS volume, then it's around $10 a month to store it. 
 
-  # No time to get everything yet - will update later. SNAPID will always be uptodate.
-  # for not, just get the relevant mef data so prob 10GB is ok.
-  #MEF_H3K4me3_ChIPSeq = 0 
-  #MEF_H3K27me3_ChIPSeq = 11
+  # I wonder if it's worth seeing if they'll host this as a public dataset? 
 
   set :datasets,  [
                    { :geo => 'GSM307608', :name => 'MEF_H3K4me3_ChIPSeq' ,   :sra => 'SRX001/SRX001933' },
@@ -52,7 +49,7 @@ set :geo, 'GSE12241'
                    { :geo => 'GSM307620', :name => 'ES_H3K36me3_ChIPSeq',    :sra => 'SRX001/SRX001922' },
                    { :geo => 'GSM307623', :name => 'ES_RPol2_ChIPSeq',       :sra => 'SRX001/SRX001926' },
                    { :geo => 'GSM307606', :name => 'ESHyb_H3K36me3_ChIPSeq', :sra => 'SRX001/SRX001928' },
-                   { :geo => 'GSM307609', :name => 'MEF_H3K27me3_ChIPSeq',   :sra => 'SRX001/SRX001931' }
+                   { :geo => 'GSM307609', :name => 'MEF_H3K27me3_ChIPSeq',   :sra => 'SRX001/SRX001931' },
                    { :geo => 'GSM307616', :name => 'NP_H3K9me3_ChIPSeq',     :sra => 'SRX001/SRX001939' },
                    { :geo => 'GSM307619', :name => 'ES_H3K27me3_ChIPSeq',    :sra => 'SRX001/SRX001921' },
                    { :geo => 'GSM307622', :name => 'ES_H4K20me3_ChIPSeq',    :sra => 'SRX001/SRX001925' },
@@ -73,7 +70,7 @@ set :geo, 'GSE12241'
   #cap EBS:mount_xfs
 
 
-desc "Download each dataset one to the new EBS volume"
+desc "Download each dataset on to the new EBS volume"
 task :fetch_data, :roles => proc{fetch :group_name} do
   datasets.each do |d|
     ftp_path =  "#{ftp_dir}/#{d[:sra]}"
